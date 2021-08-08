@@ -16,6 +16,7 @@ Pre-population is required in order to run this APP. Use the following command t
 These are actual functionalities of the APP. Use the following commands in order to perform the same. Make sure, the info is pre-populated in DB before running these commands-
 
 1) Search and get the movie information 
+<img width="929" alt="Screenshot 2021-08-08 at 7 28 39 PM" src="https://user-images.githubusercontent.com/13523510/128634578-8d7c3d4f-14ff-41c8-9952-944cbc0893a8.png">
 
 2) Search and get movies for a particular user
 
