@@ -18,7 +18,8 @@ These are actual functionalities of the APP. Use the following commands in order
 1) Search and get the movie information 
 <img width="929" alt="Screenshot 2021-08-08 at 7 28 39 PM" src="https://user-images.githubusercontent.com/13523510/128634578-8d7c3d4f-14ff-41c8-9952-944cbc0893a8.png">
 
-2) Search and get movies for a particular user
+2) Search and get movies for a particular user(where a user has commented/rated a movie)
+<img width="858" alt="Screenshot 2021-08-08 at 7 30 37 PM" src="https://user-images.githubusercontent.com/13523510/128634631-3193ff44-1709-4ae4-95e3-bcb7f5bcefae.png">
 
 3) Update/create the rating of a movie, for a particular user
 
