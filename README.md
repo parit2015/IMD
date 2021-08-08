@@ -28,3 +28,5 @@ These are actual functionalities of the APP. Use the following commands in order
 
 
 4) Add a comment to a movie, for a particular user
+<img width="869" alt="Screenshot 2021-08-08 at 7 37 39 PM" src="https://user-images.githubusercontent.com/13523510/128634853-8cb434d8-83f1-4a72-ab00-7cab963e0374.png">
+
