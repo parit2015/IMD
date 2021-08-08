@@ -22,5 +22,7 @@ These are actual functionalities of the APP. Use the following commands in order
 <img width="858" alt="Screenshot 2021-08-08 at 7 30 37 PM" src="https://user-images.githubusercontent.com/13523510/128634631-3193ff44-1709-4ae4-95e3-bcb7f5bcefae.png">
 
 3) Update/create the rating of a movie, for a particular user
+<img width="864" alt="Screenshot 2021-08-08 at 7 33 57 PM" src="https://user-images.githubusercontent.com/13523510/128634754-da469d66-a7c7-4698-8853-ee88a93c515e.png">
+
 
 4) Add a comment to a movie, for a particular user
