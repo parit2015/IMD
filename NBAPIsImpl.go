@@ -25,7 +25,7 @@ func addComment(writer http.ResponseWriter, request *http.Request) {
 	var mappingOld models.MovieUserMappingInformation
 	err := collectionMappings.FindOne(context.TODO(), filter).Decode(&mappingOld)
 	if err != nil {
-		fmt.Println("Failed to find Mapping information for userid: ", userid, " and moviename: ", moviename, 
+		fmt.Println("Failed to find Mapping information for userid: ", userid, " and moviename: ", moviename,
 			"; ", err)
 		return
 	}
@@ -109,7 +109,7 @@ func getMoviesByUser(writer http.ResponseWriter, request *http.Request) {
 
 	var userId, _ = strconv.Atoi(mux.Vars(request)["user-id"])
 	moviesByUser.UserId = userId
-	cur, err := collectionMappings.Find(context.TODO(), bson.M{"user": userId})
+	mappingsByUserId, err := collectionMappings.Find(context.TODO(), bson.M{"user": userId})
 	if err != nil {
 		fmt.Println("Failed to find Mapping information for userid: ", userId, "; ", err)
 		return
@@ -117,13 +117,13 @@ func getMoviesByUser(writer http.ResponseWriter, request *http.Request) {
 	defer func(cur *mongo.Cursor, ctx context.Context) {
 		err := cur.Close(ctx)
 		if err != nil {
-
+			return
 		}
-	}(cur, context.TODO())
+	}(mappingsByUserId, context.TODO())
 
-	for cur.Next(context.TODO()) {
+	for mappingsByUserId.Next(context.TODO()) {
 		matchedMapping := models.MovieUserMappingInformation{}
-		err := cur.Decode(&matchedMapping)
+		err := mappingsByUserId.Decode(&matchedMapping)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -141,8 +141,8 @@ func getMoviesByUser(writer http.ResponseWriter, request *http.Request) {
 
 		moviesByUser.MoviesInfo = append(moviesByUser.MoviesInfo, movieInfo)
 	}
-	if err := cur.Err(); err != nil {
-		log.Fatal(err)
+	if err := mappingsByUserId.Err(); err != nil {
+		return
 	}
 
 	err = json.NewEncoder(writer).Encode(moviesByUser)
@@ -155,7 +155,7 @@ func getMovie(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 
 	var movieInfo models.MovieInformation
-	
+
 	var movieName = mux.Vars(request)["movie-name"]
 
 	movieNameFilter := bson.M{"name": movieName}
@@ -164,7 +164,7 @@ func getMovie(writer http.ResponseWriter, request *http.Request) {
 		fmt.Println("Failed to find Movie information for moviename: ", movieName, "; ", err)
 		return
 	}
-	
+
 	movieMappingInfo, err := collectionMappings.Find(context.TODO(), bson.M{"movie": movieInfo.Name})
 	if err != nil {
 		fmt.Println("Failed to find Mapping information for moviename: ", movieInfo.Name, "; ", err)
@@ -182,20 +182,20 @@ func getMovie(writer http.ResponseWriter, request *http.Request) {
 		var matchedMapping models.MovieUserMappingInformation
 		err := movieMappingInfo.Decode(&matchedMapping)
 		if err != nil {
-			log.Fatal(err)
+			return
 		}
 
 		if matchedMapping.MovieName == movieInfo.Name {
 			movieDetailed.MovieInfo = models.MovieInformation{Name: movieInfo.Name, Type: movieInfo.Type, Description: movieInfo.Description}
 			movieDetailed.Count += 1
-			movieDetailed.Rating = (movieDetailed.Rating + matchedMapping.Rating)/float32(movieDetailed.Count)
+			movieDetailed.Rating = (movieDetailed.Rating + matchedMapping.Rating) / float32(movieDetailed.Count)
 			for _, v := range matchedMapping.Comment {
 				movieDetailed.Comments = append(movieDetailed.Comments, v)
 			}
 		}
 	}
 	if err := movieMappingInfo.Err(); err != nil {
-		log.Fatal(err)
+		return
 	}
 
 	err = json.NewEncoder(writer).Encode(movieDetailed)
