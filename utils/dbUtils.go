@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-func findMany(collection *mongo.Collection, filter bson.M) (*mongo.Cursor, error) {
+func FindMany(collection *mongo.Collection, filter bson.M) (*mongo.Cursor, error) {
 	/*
 	This function finds more than one document
 
@@ -30,7 +30,7 @@ func findMany(collection *mongo.Collection, filter bson.M) (*mongo.Cursor, error
 	return targetObj, nil
 }
 
-func findOne(collection *mongo.Collection, filter bson.M, targetObj interface{}) {
+func FindOne(collection *mongo.Collection, filter bson.M, targetObj interface{}) {
 	/*
 	This function finds one and only one document
 
@@ -61,7 +61,7 @@ func findOneAndUpdate(collection *mongo.Collection, filter bson.M, tobeUpdatedIn
 	}
 }
 
-func insertDocs(collection *mongo.Collection, writer http.ResponseWriter, request *http.Request,
+func InsertDocs(collection *mongo.Collection, writer http.ResponseWriter, request *http.Request,
 					targetObj interface{}) {
 	writer.Header().Set("Content-Type", "application/json")
 
