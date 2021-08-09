@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Sugarbox/helper"
+	"IMD-master/helper"
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -21,7 +21,7 @@ func main() {
 	r.HandleFunc("/IMDB/movies", createMovie).Methods("POST")
 	r.HandleFunc("/IMDB/users", createUsers).Methods("POST")
 	r.HandleFunc("/IMDB/mappings", createMappings).Methods("POST")
-
+	
 	/*
 	The set of endpoints to be exposed as northbound APIs
 	*/
