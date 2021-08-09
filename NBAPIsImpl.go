@@ -85,13 +85,9 @@ func addComment(writer http.ResponseWriter, request *http.Request) {
 	// Capture rating information from tobe updated document, it is required to restore the same after doc updation
 	findOne(collectionMappings, bson.M{"user": userid, "movie": moviename}, &mappingOld)
 	
-	// target document to be persisted in db
+	// Create/update tobe updated bson doc in DB
 	_ = json.NewDecoder(request.Body).Decode(&mappingNew)
-	
-	// fetching the new comment from request body and append into existing list of comments
 	commentsAppended := append(mappingOld.Comment, mappingNew.Comment...)
-	
-	// Create/updated tobe updated bson doc in database
 	tobeUpdatedBsonDocument := bson.D{
 		{"$set", bson.D{
 			{"comment", commentsAppended},
