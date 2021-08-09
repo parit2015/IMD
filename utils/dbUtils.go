@@ -79,3 +79,17 @@ func InsertDocs(collection *mongo.Collection, writer http.ResponseWriter, reques
 		}
 	}
 }
+
+func DeleteDocs(collection *mongo.Collection, writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+
+	deleteResult, err := collection.DeleteMany(context.TODO(), bson.M{})
+	if err != nil {
+		return
+	}
+
+	err = json.NewEncoder(writer).Encode(deleteResult)
+	if err != nil {
+		return
+	}
+}
