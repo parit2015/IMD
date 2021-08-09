@@ -21,6 +21,7 @@ func main() {
 	r.HandleFunc("/IMDB/movies", createMovie).Methods("POST")
 	r.HandleFunc("/IMDB/users", createUsers).Methods("POST")
 	r.HandleFunc("/IMDB/mappings", createMappings).Methods("POST")
+	r.HandleFunc("/IMDB/deleteCollections", deleteCollections).Methods("DELETE")
 	
 	/*
 	The set of endpoints to be exposed as northbound APIs
