@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"net/http"
 )
 
 func findMany(collection *mongo.Collection, filter bson.M) (*mongo.Cursor, error) {
@@ -56,5 +58,24 @@ func findOneAndUpdate(collection *mongo.Collection, filter bson.M, tobeUpdatedIn
 	if err != nil {
 		fmt.Println("Failed to find/update Document; ", err)
 		return
+	}
+}
+
+func insertDocs(collection *mongo.Collection, writer http.ResponseWriter, request *http.Request,
+					targetObj interface{}) {
+	writer.Header().Set("Content-Type", "application/json")
+
+	_ = json.NewDecoder(request.Body).Decode(&targetObj)
+	for _, v := range targetObj.([]interface{}) {
+		result, err := collection.InsertOne(context.TODO(), v)
+		if err != nil {
+			fmt.Println("Failed to insert information; ", err)
+			return
+		}
+
+		err = json.NewEncoder(writer).Encode(result)
+		if err != nil {
+			return
+		}
 	}
 }
