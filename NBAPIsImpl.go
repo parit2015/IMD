@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Sugarbox/models"
+	"IMD-master/models"
 	"context"
 	"encoding/json"
 	"fmt"
