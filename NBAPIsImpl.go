@@ -69,9 +69,10 @@ func addComment(writer http.ResponseWriter, request *http.Request) {
 	/*
 	This function provides the facility for user to add comment for a particular movie
 	
-	description:
-		* Movie and User information has been passed in as part of the API url
-		* Tobe updated comment information has been passed as the json payload in the request
+	params:
+		userid: passed as the request url variable
+		moviename: passed as the request url variable
+		comment: passed as the request payload param
 	*/
 	writer.Header().Set("Content-Type", "application/json")
 
@@ -80,27 +81,32 @@ func addComment(writer http.ResponseWriter, request *http.Request) {
 
 	userid, _ := strconv.Atoi(params["user-id"])
 	moviename := params["movie-name"]
+	
+	// Capture rating information from tobe updated document, it is required to restore the same after doc updation
 	findOne(collectionMappings, bson.M{"user": userid, "movie": moviename}, &mappingOld)
-
+	
+	// target document to be persisted in db
 	_ = json.NewDecoder(request.Body).Decode(&mappingNew)
-
-	for _, v := range mappingNew.Comment {
-		mappingOld.Comment = append(mappingOld.Comment, v)
-	}
-	mappingExtended := mappingOld.Comment
-
-	updateComment := bson.D{
+	
+	// fetching the new comment from request body and append into existing list of comments
+	commentsAppended := append(mappingOld.Comment, mappingNew.Comment...)
+	
+	// Create/updated tobe updated bson doc in database
+	tobeUpdatedBsonDocument := bson.D{
 		{"$set", bson.D{
-			{"rating", mappingOld.Rating},
-			{"comment", mappingExtended},
+			{"comment", commentsAppended},
 		}},
 	}
 	findOneAndUpdate(collectionMappings,
-		bson.M{"user": userid, "movie": moviename},
-		updateComment, &mappingNew)
+					bson.M{"user": userid, "movie": moviename},
+					tobeUpdatedBsonDocument, &mappingNew)
 
+	// Update the params to response writing 
 	mappingNew.UserId = userid
-	mappingNew.MovieName = mux.Vars(request)["movie-name"]
+	mappingNew.MovieName = moviename
+	mappingNew.Rating = mappingOld.Rating
+	mappingNew.Comment = commentsAppended
+	
 	err := json.NewEncoder(writer).Encode(mappingNew)
 	if err != nil {
 		return
