@@ -82,7 +82,8 @@ func addComment(writer http.ResponseWriter, request *http.Request) {
 	userid, _ := strconv.Atoi(params["user-id"])
 	moviename := params["movie-name"]
 	
-	// Capture rating information from tobe updated document, it is required to restore the same after doc updation
+	// Capture rating information from tobe updated(i.e old) document, 
+	// it is required to restore the same after doc updation
 	findOne(collectionMappings, bson.M{"user": userid, "movie": moviename}, &mappingOld)
 	
 	// Create/update tobe updated bson doc in DB
@@ -124,19 +125,28 @@ func updateRating(writer http.ResponseWriter, request *http.Request) {
 
 	userid, _ := strconv.Atoi(params["user-id"])
 	moviename := params["movie-name"]
+
+	// Capture comments information from tobe updated(i.e old) document, 
+	// it is required to restore the same after doc updation
 	findOne(collectionMappings, bson.M{"user": userid, "movie": moviename}, &mappingOld)
 
+	// Create/update tobe updated bson doc in DB
 	_ = json.NewDecoder(request.Body).Decode(&mappingNew)
+	ratingNew := mappingNew.Rating
 	updateRating := bson.D{
 		{"$set", bson.D{
-			{"rating", mappingNew.Rating},
-			{"comment", mappingOld.Comment},
+			{"rating", ratingNew},
 		}},
 	}
-	findOneAndUpdate(collectionMappings, bson.M{"user": userid, "movie": moviename}, updateRating, &mappingNew)
+	findOneAndUpdate(collectionMappings, 
+					bson.M{"user": userid, "movie": moviename}, 
+					updateRating, &mappingNew)
 
 	mappingNew.UserId = userid
 	mappingNew.MovieName = moviename
+	mappingNew.Comment = mappingOld.Comment
+	mappingNew.Rating = ratingNew
+	
 	err := json.NewEncoder(writer).Encode(mappingNew)
 	if err != nil {
 		return
