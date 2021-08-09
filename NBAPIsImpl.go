@@ -65,6 +65,20 @@ func findOneAndUpdate(collection *mongo.Collection, filter bson.M, tobeUpdatedIn
 	}
 }
 
+func getOldNewMappingDocument(request *http.Request, collection *mongo.Collection, 
+			DocOld *models.MovieUserMappingInformation,	DocNew *models.MovieUserMappingInformation, filter bson.M) {
+	
+	findOne(collection, filter, DocOld)
+	
+	_ = json.NewDecoder(request.Body).Decode(DocNew)
+}
+
+func updateDB(collection *mongo.Collection, filter bson.M, tobeUpdateBSONDoc bson.D, 
+	targetObj *models.MovieUserMappingInformation) {
+	
+	findOneAndUpdate(collection, filter, tobeUpdateBSONDoc, targetObj)
+}
+
 func addComment(writer http.ResponseWriter, request *http.Request) {
 	/*
 	This function provides the facility for user to add comment for a particular movie
@@ -75,30 +89,27 @@ func addComment(writer http.ResponseWriter, request *http.Request) {
 		comment: passed as the request payload param
 	*/
 	writer.Header().Set("Content-Type", "application/json")
+	
+	userid, _ := strconv.Atoi(mux.Vars(request)["user-id"])
+	moviename := mux.Vars(request)["movie-name"]
 
+	/*
+	1. Old document from db is required to restore other info which is not required to be updated
+	2. New document is from request body, it is required in order to fetch the tobe updated param
+	*/
 	var mappingOld, mappingNew models.MovieUserMappingInformation
-	var params = mux.Vars(request)
-
-	userid, _ := strconv.Atoi(params["user-id"])
-	moviename := params["movie-name"]
+	getOldNewMappingDocument(request, collectionMappings, &mappingOld, &mappingNew, 
+											bson.M{"user": userid, "movie": moviename})
 	
-	// Capture rating information from tobe updated(i.e old) document, 
-	// it is required to restore the same after doc updation
-	findOne(collectionMappings, bson.M{"user": userid, "movie": moviename}, &mappingOld)
-	
-	// Create/update tobe updated bson doc in DB
-	_ = json.NewDecoder(request.Body).Decode(&mappingNew)
 	commentsAppended := append(mappingOld.Comment, mappingNew.Comment...)
 	tobeUpdatedBsonDocument := bson.D{
 		{"$set", bson.D{
 			{"comment", commentsAppended},
 		}},
 	}
-	findOneAndUpdate(collectionMappings,
-					bson.M{"user": userid, "movie": moviename},
-					tobeUpdatedBsonDocument, &mappingNew)
+	updateDB(collectionMappings, bson.M{"user": userid, "movie": moviename}, tobeUpdatedBsonDocument, &mappingNew)
 
-	// Update the params to response writing 
+	// Update the params to response writer 
 	mappingNew.UserId = userid
 	mappingNew.MovieName = moviename
 	mappingNew.Rating = mappingOld.Rating
@@ -120,28 +131,26 @@ func updateRating(writer http.ResponseWriter, request *http.Request) {
 	*/
 	writer.Header().Set("Content-Type", "application/json")
 
+	userid, _ := strconv.Atoi(mux.Vars(request)["user-id"])
+	moviename := mux.Vars(request)["movie-name"]
+	
+	/*
+	1. Old document from db is required to restore other info which is not required to be updated
+	2. New document is from request body, it is required in order to fetch the tobe updated param
+	 */
 	var mappingOld, mappingNew models.MovieUserMappingInformation
-	var params = mux.Vars(request)
-
-	userid, _ := strconv.Atoi(params["user-id"])
-	moviename := params["movie-name"]
-
-	// Capture comments information from tobe updated(i.e old) document, 
-	// it is required to restore the same after doc updation
-	findOne(collectionMappings, bson.M{"user": userid, "movie": moviename}, &mappingOld)
-
-	// Create/update tobe updated bson doc in DB
-	_ = json.NewDecoder(request.Body).Decode(&mappingNew)
+	getOldNewMappingDocument(request, collectionMappings, &mappingOld, &mappingNew, 
+											bson.M{"user": userid, "movie": moviename})
+	
 	ratingNew := mappingNew.Rating
-	updateRating := bson.D{
+	tobeUpdatedBsonDocument := bson.D{
 		{"$set", bson.D{
 			{"rating", ratingNew},
 		}},
 	}
-	findOneAndUpdate(collectionMappings, 
-					bson.M{"user": userid, "movie": moviename}, 
-					updateRating, &mappingNew)
+	updateDB(collectionMappings, bson.M{"user": userid, "movie": moviename}, tobeUpdatedBsonDocument, &mappingNew)
 
+	// Update the params to response writer 
 	mappingNew.UserId = userid
 	mappingNew.MovieName = moviename
 	mappingNew.Comment = mappingOld.Comment
