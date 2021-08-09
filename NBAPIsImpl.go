@@ -2,6 +2,7 @@ package main
 
 import (
 	"IMD-master/models"
+	"IMD-master/utils"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -31,7 +32,7 @@ func addComment(writer http.ResponseWriter, request *http.Request) {
 	2. New document is from request body, it is required in order to fetch the tobe updated param
 	*/
 	var mappingOld, mappingNew models.MovieUserMappingInformation
-	getOldNewDocument(request, collectionMappings, &mappingOld, &mappingNew, 
+	utils.GetOldNewDocument(request, collectionMappings, &mappingOld, &mappingNew, 
 											bson.M{"user": userid, "movie": moviename})
 	
 	commentsAppended := append(mappingOld.Comment, mappingNew.Comment...)
@@ -40,7 +41,7 @@ func addComment(writer http.ResponseWriter, request *http.Request) {
 			{"comment", commentsAppended},
 		}},
 	}
-	updateDB(collectionMappings, bson.M{"user": userid, "movie": moviename}, tobeUpdatedBsonDocument, &mappingNew)
+	utils.UpdateDB(collectionMappings, bson.M{"user": userid, "movie": moviename}, tobeUpdatedBsonDocument, &mappingNew)
 
 	// Update the params to response writer 
 	mappingNew.UserId = userid
@@ -72,7 +73,7 @@ func updateRating(writer http.ResponseWriter, request *http.Request) {
 	2. New document is from request body, it is required in order to fetch the tobe updated param
 	 */
 	var mappingOld, mappingNew models.MovieUserMappingInformation
-	getOldNewDocument(request, collectionMappings, &mappingOld, &mappingNew, 
+	utils.GetOldNewDocument(request, collectionMappings, &mappingOld, &mappingNew, 
 											bson.M{"user": userid, "movie": moviename})
 	
 	ratingNew := mappingNew.Rating
@@ -81,7 +82,7 @@ func updateRating(writer http.ResponseWriter, request *http.Request) {
 			{"rating", ratingNew},
 		}},
 	}
-	updateDB(collectionMappings, bson.M{"user": userid, "movie": moviename}, tobeUpdatedBsonDocument, &mappingNew)
+	utils.UpdateDB(collectionMappings, bson.M{"user": userid, "movie": moviename}, tobeUpdatedBsonDocument, &mappingNew)
 
 	// Update the params to response writer 
 	mappingNew.UserId = userid
@@ -111,7 +112,7 @@ func getMoviesByUser(writer http.ResponseWriter, request *http.Request) {
 	userId, _ := strconv.Atoi(params["user-id"])
 
 	moviesByUser.UserId = userId
-	mappingsByUserId, err := findMany(collectionMappings, bson.M{"user": userId})
+	mappingsByUserId, err := utils.FindMany(collectionMappings, bson.M{"user": userId})
 	if err != nil {
 		fmt.Println("Failed to find mapping information for user; ", err)
 		return
@@ -125,7 +126,7 @@ func getMoviesByUser(writer http.ResponseWriter, request *http.Request) {
 			log.Fatal(err)
 		}
 		
-		findOne(collectionMovies, bson.M{"name": matchedMapping.MovieName}, &movieInfo)
+		utils.FindOne(collectionMovies, bson.M{"name": matchedMapping.MovieName}, &movieInfo)
 
 		movieInfo.Rating = matchedMapping.Rating
 		for _, v := range matchedMapping.Comment {
@@ -158,9 +159,9 @@ func getMovie(writer http.ResponseWriter, request *http.Request) {
 
 	var movieName = mux.Vars(request)["movie-name"]
 	
-	findOne(collectionMovies, bson.M{"name": movieName}, &movieInfo)
+	utils.FindOne(collectionMovies, bson.M{"name": movieName}, &movieInfo)
 
-	movieMappingInfo, err := findMany(collectionMappings, bson.M{"movie": movieInfo.Name})
+	movieMappingInfo, err := utils.FindMany(collectionMappings, bson.M{"movie": movieInfo.Name})
 	if err != nil {
 		fmt.Println("Failed to find mapping information for moviename; ", err)
 		return
