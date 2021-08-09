@@ -7,77 +7,10 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
 	"strconv"
 )
-
-func findMany(collection *mongo.Collection, filter bson.M) (*mongo.Cursor, error) {
-	/*
-	This function finds more than one document
-	
-	params: 
-		collection: Collection on which the search has to be performed
-		filter: Filtering condition of the search
-	
-	returns:
-		mongo-cursor: Collection of resultant document
-	 */
-	var targetObj *mongo.Cursor
-	targetObj, err := collection.Find(context.TODO(), filter)
-	if err != nil {
-		fmt.Println("Failed to find Documents; ", err)
-		return nil, err
-	}
-
-	return targetObj, nil
-}
-
-func findOne(collection *mongo.Collection, filter bson.M, targetObj interface{}) {
-	/*
-	This function finds one and only one document
-
-	params:
-		collection: Collection on which the search has to be performed
-		filter: Filtering condition of the search
-		targetObj: Object on which the resultant document has to be saved
-	*/
-	err := collection.FindOne(context.TODO(), filter).Decode(targetObj)
-	if err != nil {
-		fmt.Println("Failed to find One Document; ", err)
-	}
-}
-
-func findOneAndUpdate(collection *mongo.Collection, filter bson.M, tobeUpdatedInfo bson.D, targetObj interface{}) {
-	/*
-	This function finds and update one document
-
-	params:
-		collection: Collection on which the search has to be performed
-		filter: Filtering condition of the search
-		tobeUpdatedInfo: The payload, that needs to be updated in the filtered document
-	*/
-	err := collection.FindOneAndUpdate(context.TODO(), filter, tobeUpdatedInfo).Decode(targetObj)
-	if err != nil {
-		fmt.Println("Failed to find/update Document; ", err)
-		return
-	}
-}
-
-func getOldNewMappingDocument(request *http.Request, collection *mongo.Collection, 
-			DocOld *models.MovieUserMappingInformation,	DocNew *models.MovieUserMappingInformation, filter bson.M) {
-	
-	findOne(collection, filter, DocOld)
-	
-	_ = json.NewDecoder(request.Body).Decode(DocNew)
-}
-
-func updateDB(collection *mongo.Collection, filter bson.M, tobeUpdateBSONDoc bson.D, 
-	targetObj *models.MovieUserMappingInformation) {
-	
-	findOneAndUpdate(collection, filter, tobeUpdateBSONDoc, targetObj)
-}
 
 func addComment(writer http.ResponseWriter, request *http.Request) {
 	/*
@@ -98,7 +31,7 @@ func addComment(writer http.ResponseWriter, request *http.Request) {
 	2. New document is from request body, it is required in order to fetch the tobe updated param
 	*/
 	var mappingOld, mappingNew models.MovieUserMappingInformation
-	getOldNewMappingDocument(request, collectionMappings, &mappingOld, &mappingNew, 
+	getOldNewDocument(request, collectionMappings, &mappingOld, &mappingNew, 
 											bson.M{"user": userid, "movie": moviename})
 	
 	commentsAppended := append(mappingOld.Comment, mappingNew.Comment...)
@@ -139,7 +72,7 @@ func updateRating(writer http.ResponseWriter, request *http.Request) {
 	2. New document is from request body, it is required in order to fetch the tobe updated param
 	 */
 	var mappingOld, mappingNew models.MovieUserMappingInformation
-	getOldNewMappingDocument(request, collectionMappings, &mappingOld, &mappingNew, 
+	getOldNewDocument(request, collectionMappings, &mappingOld, &mappingNew, 
 											bson.M{"user": userid, "movie": moviename})
 	
 	ratingNew := mappingNew.Rating
